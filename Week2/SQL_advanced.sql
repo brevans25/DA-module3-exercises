@@ -18,6 +18,27 @@ USE coffeeshop_db;
 -- for THAT SAME store (correlated subquery).
 -- Sort by store_name, then order_total DESC.
 
+SELECT o.order_id,
+concat(c.first_name, " ",c.last_name) as customer_name,
+s.name,
+date_format(o.order_datetime, '%m/%d/%Y') as order_datetime,
+sum(oi.quantity * p.price) as order_total
+from orders o
+left join order_items oi on o.order_id = oi.order_id
+left join products p on oi.product_id = p.product_id
+left join customers c on o.customer_id = c.customer_id
+left join stores s on o.store_id = s.store_id
+where o.status = 'paid'
+
+group by o.order_id,
+c.first_name,
+c.last_name,
+s.name,
+o.order_datetime
+
+
+-- I have absolutely no idea of what this exercise is asking me to do 
+
 -- =========================================================
 -- Q2) CTE: Daily revenue and 3-day rolling average (PAID only)
 -- =========================================================
@@ -28,6 +49,26 @@ USE coffeeshop_db;
 --   rolling_3day_avg = average of revenue_day over the current day and the prior 2 days.
 -- Use a window function for the rolling average.
 -- Sort by store_name, order_date.
+
+with rev as (
+SELECT s.store_id,
+s.name,
+date_format(o.order_datetime, '%m/%d/%Y') as order_datetime,
+sum(oi.quantity * p.price) as revenue_day
+from orders o
+left join order_items oi on o.order_id = oi.order_id
+left join products p on oi.product_id = p.product_id
+left join customers c on o.customer_id = c.customer_id
+left join stores s on o.store_id = s.store_id
+where o.status = 'paid'
+
+group by s.store_id,
+o.order_datetime
+
+
+) 
+
+select * from rev
 
 -- =========================================================
 -- Q3) Window function: Rank customers by lifetime spend (PAID only)
